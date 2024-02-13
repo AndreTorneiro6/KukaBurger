@@ -1,0 +1,98 @@
+&ACCESS RVO
+&REL 87
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\ExpertSubmit
+DEF wash_clean( )  ; Define the function for washing and cleaning
+    DECL INT coord  ; Declare variable to store coordinate
+    DECL FRAME auxWashingCleaning  ; Declare auxiliary frame for washing and cleaning
+    DECL E6AXIS Aux  ; Declare auxiliary axis for washing and cleaning
+
+    ; Loop through the washing and cleaning coordinates
+    FOR coord = 1 TO 2
+        auxWashingCleaning.X = KB_WashCoords[coord].X  ; Set X coordinate
+        auxWashingCleaning.Y = KB_WashCoords[coord].Y  ; Set Y coordinate
+        auxWashingCleaning.Z = KB_WashCoords[coord].Z  ; Set Z coordinate
+        PTP auxWashingCleaning  ; Move to the washing and cleaning position
+
+        IF coord == 1 THEN  ; If it's the first coordinate
+            water_wash( )  ; Start water wash process
+            $OUT[2] = FALSE  ; Turn off output 2
+        ELSE  ; Otherwise
+            Aux = $AXIS_ACT  ; Set auxiliary axis to current axis position
+            clean( )  ; Start cleaning process
+            PTP {X 55, Y 95, Z 60}  ; Move to specified position
+            PTP Aux  ; Move to the auxiliary axis position
+            auxWashingCleaning.Z = auxWashingCleaning.Z - 30  ; Adjust Z coordinate
+            LIN auxWashingCleaning  ; Linear move to the adjusted position
+            KB_GripOpen = 1  ; Open gripper
+            WAIT FOR KB_GripOpen == 2  ; Wait for gripper to fully open
+            WAIT SEC 2  ; Wait for 2 seconds
+            LIN {Z 30}  ; Linear move to specified Z coordinate
+            KB_GripClose = 1  ; Close gripper
+            WAIT FOR KB_GripClose == 2  ; Wait for gripper to fully close
+            KB_GripClose = 0  ; Reset gripper close signal
+        ENDIF
+    ENDFOR
+
+    $TOOL = TOOL_DATA[3]  ; Set the tool to the specified tool
+
+END  ; End of the function wash_clean()
+
+DEF water_wash( )  ; Define the function for water wash
+    DECL AXIS washingAngle  ; Declare washing angle axis
+    DECL INT iteration  ; Declare iteration variable
+
+    washingCleaning.Z = washingCleaning.Z - 20  ; Adjust Z coordinate for washing
+    LIN washingCleaning  ; Linear move to the adjusted position
+
+    ; Loop through the water wash iterations
+    FOR iteration = 1 TO 2
+        washingCleaning.Z = washingCleaning.Z - 10  ; Adjust Z coordinate
+        LIN washingCleaning  ; Linear move to the adjusted position
+        WAIT SEC 0.5  ; Wait for 0.5 seconds
+        washingCleaning.Z = washingCleaning.Z + 10  ; Adjust Z coordinate back
+        LIN washingCleaning  ; Linear move to the adjusted position
+        washingCleaning.X = washingCleaning.X + 20  ; Adjust X coordinate
+        LIN washingCleaning  ; Linear move to the adjusted position
+        KB_Music = 1  ; Play music
+        WAIT FOR KB_Music == 0  ; Wait for music to stop
+        SPLINE  ; Start spline motion
+        SCIRC {X 40, Y 0, Z 50}, {X 0, Y -20, Z 50}  ; Specify circular motion
+        SCIRC {X 0, Y 40, Z 50}, {X 20, Y 0, Z 50}  ; Specify circular motion
+        SPL {X 20, Y 20, Z 50}  ; Specify spline motion
+        ENDSPLINE  ; End spline motion
+        KB_Music = 2  ; Stop music
+    ENDFOR
+
+    washingCleaning.Z = washingCleaning.Z + 10  ; Adjust Z coordinate back
+    LIN washingCleaning  ; Linear move to the adjusted position
+
+END  ; End of the function water_wash()
+
+DEF clean( )  ; Define the function for cleaning
+    $TOOL = TOOL_DATA[4]  ; Set the tool to the specified tool
+    KB_GripOpen = 1  ; Open gripper
+    WAIT FOR KB_GripOpen == 2  ; Wait for gripper to fully open
+    KB_GripOpen = 0  ; Reset gripper open signal
+    WAIT SEC 2  ; Wait for 2 seconds
+    LIN {Z -50}  ; Linear move to the specified Z coordinate
+    KB_GripClose = 1  ; Close gripper
+    WAIT FOR KB_GripClose == 2  ; Wait for gripper to fully close
+    KB_GripClose = 0  ; Reset gripper close signal
+    washingCleaning.Z = 30  ; Adjust Z coordinate
+    LIN washingCleaning  ; Linear move to the adjusted position
+    change_orientation("F")  ; Change orientation to front
+    $BASE = BASE_DATA[6]  ; Set the base to the specified base
+    SPLINE  ; Start spline motion
+    SLIN {X 45, Y 30, Z -30}  ; Specify linear motion
+    SPL {X 45,Y 50, Z -30}  ; Specify spline motion
+    SPL {X 55, Y 70, Z -30}  ; Specify spline motion
+    SPL {X 95, Y 50, Z -30}  ; Specify spline motion
+    SPL {X 125, Y 70, Z -30}  ; Specify spline motion
+    SPL {X 175, Y 50, Z -30}  ; Specify spline motion
+    SPL {X 200, Y 70, Z -30}  ; Specify spline motion
+    SLIN {X 300, Y 70, Z -30}  ; Specify linear motion
+    ENDSPLINE C_SPL  ; End spline motion
+    change_orientation("R")  ; Change orientation to right
+    $BASE = BASE_DATA[2]  ; Set the base to the specified base
+END  ; End of the function clean()

@@ -1,0 +1,55 @@
+&ACCESS RVO1
+&REL 345
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEF main( )
+;FOLD INI;%{PE}
+  ;FOLD BASISTECH INI
+    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+    INTERRUPT ON 3 
+    BAS (#INITMOV,0 )
+  ;ENDFOLD (BASISTECH INI)
+  ;FOLD USER INI
+    ;Make your modifications here
+
+  ;ENDFOLD (USER INI)
+;ENDFOLD (INI)
+;FOLD SPTP HOME Vel=100 % DEFAULT ;%{PE}
+;FOLD Parameters ;%{h}
+;Params IlfProvider=kukaroboter.basistech.inlineforms.movement.spline; Kuka.IsGlobalPoint=False; Kuka.PointName=HOME; Kuka.BlendingEnabled=False; Kuka.MoveDataPtpName=DEFAULT; Kuka.VelocityPtp=100; Kuka.VelocityFieldEnabled=True; Kuka.CurrentCDSetIndex=0; Kuka.MovementParameterFieldEnabled=True; IlfCommand=SPTP
+;ENDFOLD
+SPTP XHOME WITH $VEL_AXIS[1] = SVEL_JOINT(100.0), $TOOL = STOOL2(FHOME), $BASE = SBASE(FHOME.BASE_NO), $IPO_MODE = SIPO_MODE(FHOME.IPO_FRAME), $LOAD = SLOAD(FHOME.TOOL_NO), $ACC_AXIS[1] = SACC_JOINT(PDEFAULT), $APO = SAPO_PTP(PDEFAULT), $GEAR_JERK[1] = SGEAR_JERK(PDEFAULT), $COLLMON_TOL_PRO[1] = USE_CM_PRO_VALUES(0)
+;ENDFOLD
+;FOLD SPTP HOME Vel=100 % DEFAULT ;%{PE}
+;FOLD Parameters ;%{h}
+;Params IlfProvider=kukaroboter.basistech.inlineforms.movement.spline; Kuka.IsGlobalPoint=False; Kuka.PointName=HOME; Kuka.BlendingEnabled=False; Kuka.MoveDataPtpName=DEFAULT; Kuka.VelocityPtp=100; Kuka.VelocityFieldEnabled=True; Kuka.CurrentCDSetIndex=0; Kuka.MovementParameterFieldEnabled=True; IlfCommand=SPTP
+;ENDFOLD
+SPTP XHOME WITH $VEL_AXIS[1] = SVEL_JOINT(100.0), $TOOL = STOOL2(FHOME), $BASE = SBASE(FHOME.BASE_NO), $IPO_MODE = SIPO_MODE(FHOME.IPO_FRAME), $LOAD = SLOAD(FHOME.TOOL_NO), $ACC_AXIS[1] = SACC_JOINT(PDEFAULT), $APO = SAPO_PTP(PDEFAULT), $GEAR_JERK[1] = SGEAR_JERK(PDEFAULT), $COLLMON_TOL_PRO[1] = USE_CM_PRO_VALUES(0)
+;ENDFOLD
+END
+
+GLOBAL DEF change_orientation(base: IN);
+DECL CHAR base;  ; Declare the input variable "base" as a character
+DECL INT i;      ; Declare the loop counter variable "i"
+DECL AXIS axisAngle;  ; Declare a variable to store the axis angles
+DECL AXIS home;   ; Declare a variable to store the home position
+
+$OV_PRO = 10;   ; Set the override percentage to 10%
+
+home = {A1 0, A2 -90, A3 90, A4 0, A5 0, A6 0};  ; Define the home position for the robot
+PTP home;   ; Move the robot to the home position using PTP (Point-to-Point) motion
+
+FOR i = 1 TO 3;   ; Loop through orientation options (1 to 3)
+    IF KB_Orientation[i].grip == base THEN;   ; Check if the grip of the current orientation matches the base
+        axisAngle.A4 = KB_Orientation[i].A4;   ; Set the A4 axis angle to the value from KB_Orientation
+        axisAngle.A5 = KB_Orientation[i].A5;   ; Set the A5 axis angle to the value from KB_Orientation
+        axisAngle.A6 = KB_Orientation[i].A6;   ; Set the A6 axis angle to the value from KB_Orientation
+        PTP axisAngle;   ; Move the robot to the specified orientation using PTP motion
+    ENDIF;
+ENDFOR;
+
+$OV_PRO = 100;   ; Set the override percentage back to 100%
+END;  ; End of the procedure
+
+
+

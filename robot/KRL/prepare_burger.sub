@@ -1,0 +1,92 @@
+&ACCESS RVO1
+&REL 107
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\ExpertSubmit
+DEF prepare_burger( )  ; Define the function to prepare a burger
+    DECL INT i  ; Declare integer variable i
+    DECL FRAME position  ; Declare a frame variable position
+
+    FOR i=1 TO KB_Ingredients  ; Loop through the KB_Ingredients
+
+        change_orientation("F")  ; Change the orientation to "F"
+        position.X = KB_IngCoords[i].X  ; Set the X position from KB_IngCoords
+        position.Y = KB_IngCoords[i].Y  ; Set the Y position from KB_IngCoords
+        position.Z = KB_IngCoords[i].Z  ; Set the Z position from KB_IngCoords
+        $BASE = BASE_DATA[6]  ; Set the base position to the specified base data
+
+        PTP {X 150, Y 100, Z -120}  ; Move to the specified position
+
+        IF KB_IngCoords[i].name == "H" THEN  ; Check if the ingredient name is "H"
+            $OV_PRO = 50  ; Set the override percentage to 50%
+            PTP position  ; Move to the specified position
+            KB_InPosition = 1  ; Set KB_InPosition to 1
+            WAIT FOR KB_InPosition == 0  ; Wait until KB_InPosition is 0
+            PTP{Y 100, Z -120}  ; Move to the specified position
+            change_orientation("L")  ; Change the orientation to "L"
+            $BASE = BASE_DATA[1]  ; Set the base position to the specified base data
+            PTP {X -36, Y 145, Z 120}  ; Move to the specified position
+            $OV_PRO = 10  ; Set the override percentage to 10%
+            LIN {Z 15}  ; Move linearly to the specified position
+
+            KB_GripOpen = 1  ; Open the gripper
+            WAIT FOR KB_GripOpen ==2  ; Wait until the gripper is open
+            KB_GripOpen = 0  ; Reset the gripper open signal
+            LIN {Z 120}  ; Move linearly to the specified position
+
+            $TIMER[1] = -10000  ; Set timer 1 to -10000
+            $TIMER_STOP[1] = FALSE  ; Start timer 1
+
+            WAIT FOR $TIMER_FLAG[1] == TRUE  ; Wait until timer 1 flag is TRUE
+
+            $TIMER[1] = 0  ; Reset timer 1
+            $TIMER_STOP[1] = TRUE  ; Stop timer 1
+
+            LIN {Z 15}  ; Move linearly to the specified position
+            KB_GripClose = 1  ; Close the gripper
+            WAIT FOR KB_GripClose == 2  ; Wait until the gripper is closed
+            KB_GripClose = 0  ; Reset the gripper close signal
+            LIN {Z 120}  ; Move linearly to the specified position
+            $OV_PRO = 100  ; Set the override percentage to 100%
+
+        ELSE  ; If the ingredient name is not "H"
+            $OV_PRO = 50  ; Set the override percentage to 50%
+            PTP position  ; Move to the specified position
+            KB_InPosition = 1  ; Set KB_InPosition to 1
+            WAIT FOR KB_InPosition == 0  ; Wait until KB_InPosition is 0
+            $OV_PRO = 100  ; Set the override percentage to 100%
+            PTP{Y 100, Z -120}  ; Move to the specified position
+
+        ENDIF  ; End of the IF condition
+
+        change_orientation("L")  ; Change the orientation to "L"
+        $OV_PRO = 10  ; Set the override percentage to 10%
+        $BASE = BASE_DATA[1]  ; Set the base position to the specified base data
+        PTP {X 0, Y 60, Z 120}  ; Move to the plate position
+        $TOOL =TOOL_DATA[4]  ; Set the tool to the specified tool data
+        $OV_PRO = 100  ; Set the override percentage to 100%
+        PTP {X 0, Y 0, Z 120}  ; Move to the specified position
+        $OV_PRO = 10  ; Set the override percentage to 10%
+        PTP {A4 91, A5 -90, A6 -75}  ; Move to the specified position
+        PTP {X - 46, Y -65, Z 50}  ; Move to the specified position
+        PTP {A6 -57}  ; Move to the specified position
+
+        KB_GripOpen = 1  ; Open the gripper
+        WAIT FOR KB_GripOpen ==2  ; Wait until the gripper is open
+        KB_GripOpen = 0  ; Reset the gripper open signal
+        LIN {Z 120}  ; Move linearly to the specified position
+
+        KB_GripClose = 1  ; Close the gripper
+        WAIT FOR KB_GripClose == 2  ; Wait until the gripper is closed
+        KB_GripClose = 0  ; Reset the gripper close signal
+        $OV_PRO = 100  ; Set the override percentage to 100%
+
+    ENDFOR  ; End of the FOR loop
+
+END  ; End of the function prepare_burger()
+
+GLOBAL DEF grill_on_off()  ; Define the function to turn the grill on or off
+    INTERRUPT ON  ; Enable interrupts
+    PTP {X 20, Y 180, Z 120}  ; Move to the grill position
+    LIN {Z 50}  ; Move linearly to the specified position
+    $ADVANCE = 0  ; Set advance to 0
+END  ; End of the function grill_on_off()

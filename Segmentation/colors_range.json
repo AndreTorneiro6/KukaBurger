@@ -1,0 +1,59 @@
+{
+  "tomatoHSVRange": {
+    "Hmin": 109,
+    "Hmax": 179,
+    "Smin": 217,
+    "Smax": 255,
+    "Vmin": 74,
+    "Vmax": 255
+  },
+  "breadBHSVRange": {
+    "Hmin": 6,
+    "Hmax": 14,
+    "Smin": 73,
+    "Smax": 117,
+    "Vmin": 179,
+    "Vmax": 228
+  },
+  "breadTHSVRange": {
+    "Hmin": 0,
+    "Hmax": 7,
+    "Smin": 190,
+    "Smax": 223,
+    "Vmin": 154,
+    "Vmax": 210
+  },
+  "cheeseHSVRange": {
+    "Hmin": 18,
+    "Hmax": 79,
+    "Smin": 204,
+    "Smax": 255,
+    "Vmin": 196,
+    "Vmax": 255
+  },
+  "burgerHSVRange": {
+    "Hmin": 112,
+    "Hmax": 174,
+    "Smin": 164,
+    "Smax": 234,
+    "Vmin": 173,
+    "Vmax": 219
+  },
+  "onionHSVRange": {
+    "Hmin": 115,
+    "Hmax": 159,
+    "Smin": 129,
+    "Smax": 199,
+    "Vmin": 55,
+    "Vmax": 114
+  },
+  "lettuceHSVRange": {
+    "Hmin": 40,
+    "Hmax": 74,
+    "Smin": 132,
+    "Smax": 228,
+    "Vmin": 87,
+    "Vmax": 235
+  }
+}
+

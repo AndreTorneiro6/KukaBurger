@@ -1,0 +1,11 @@
+&ACCESS RVO1
+&REL 7
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEF stop_move_interrupt( )  ; Define the function to stop movement interrupt
+    INTERRUPT OFF  ; Turn off interrupts
+    BRAKE  ; Apply brake
+    KB_ButtonClicked = FALSE  ; Reset the button clicked signal
+    WAIT SEC 4  ; Wait for 4 seconds
+    RESUME  ; Resume operation
+END  ; End of the function stop_move_interrupt()

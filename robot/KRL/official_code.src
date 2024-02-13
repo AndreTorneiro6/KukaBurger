@@ -1,0 +1,156 @@
+&ACCESS RVP
+&REL 489
+&PARAM EDITMASK = *
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+DEF official_code( )
+;FOLD INI;%{PE}
+  ;FOLD BASISTECH INI
+    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+    INTERRUPT ON 3 
+    BAS (#INITMOV,0 )
+  ;ENDFOLD (BASISTECH INI)
+  ;FOLD USER INI
+    ;Make your modifications here
+
+  ;ENDFOLD (USER INI)
+;ENDFOLD (INI)
+
+;FOLD SPTP HOME Vel=100 % DEFAULT ;%{PE}
+;FOLD Parameters ;%{h}
+;Params IlfProvider=kukaroboter.basistech.inlineforms.movement.spline; Kuka.IsGlobalPoint=False; Kuka.PointName=HOME; Kuka.BlendingEnabled=False; Kuka.MoveDataPtpName=DEFAULT; Kuka.VelocityPtp=100; Kuka.VelocityFieldEnabled=True; Kuka.CurrentCDSetIndex=0; Kuka.MovementParameterFieldEnabled=True; IlfCommand=SPTP
+;ENDFOLD
+SPTP XHOME WITH $VEL_AXIS[1] = SVEL_JOINT(100.0), $TOOL = STOOL2(FHOME), $BASE = SBASE(FHOME.BASE_NO), $IPO_MODE = SIPO_MODE(FHOME.IPO_FRAME), $LOAD = SLOAD(FHOME.TOOL_NO), $ACC_AXIS[1] = SACC_JOINT(PDEFAULT), $APO = SAPO_PTP(PDEFAULT), $GEAR_JERK[1] = SGEAR_JERK(PDEFAULT), $COLLMON_TOL_PRO[1] = USE_CM_PRO_VALUES(0)
+;ENDFOLD
+
+$ADVANCE=1  ; Enable advance mode for motion commands
+$TIMER[1] = 0  ; Reset timer 1
+$TIMER_STOP[1] = TRUE  ; Stop timer 1
+$TOOL = TOOL_DATA[3]  ; Set the tool to the specified tool data
+
+INTERRUPT DECL 3 WHEN KB_ButtonClicked==TRUE DO stop_move_interrupt()  ; Declare interrupt to stop motion when button clicked
+
+KB_JOB = 10  ; Set the initial job number
+
+LOOP  ; Start a loop
+
+    switch KB_Job  ; Switch based on the value of KB_Job
+
+    case 1  ; Case for washing and cleaning gripper
+        change_orientation("R")  ; Change the orientation to "R"
+        $BASE = BASE_DATA[2]  ; Set the base position to the specified base data
+        wash_clean()  ; Call the function to wash the gripper and clean the space
+        KB_JOB = 7  ; Set the next job number
+
+    case 2  ; Case for grabbing ingredients
+        prepare_burger()  ; Call the function to prepare the burger
+        KB_JOB = 6  ; Set the next job number
+
+    case 3  ; Case for grabbing potatoes
+        change_orientation("F")  ; Change the orientation to "F"
+        $BASE = BASE_DATA[6]  ; Set the base position to the specified base data
+        PTP {X 150, Y 100, Z -120}  ; Move to the specified position
+        PTP {X 312, Y 66, Z -15}  ; Move to the specified position
+        KB_InPosition = 1  ; Set KB_InPosition to 1
+        WAIT FOR KB_InPosition == 0  ; Wait until KB_InPosition is 0
+        PTP {Y 100, Z -120}  ; Move to the specified position
+        PTP Plate  ; Move to the plate
+        KB_GripOpen = 1  ; Open the gripper
+        WAIT FOR KB_GripOpen == 2  ; Wait until the gripper is open
+        LIN {Z -120}  ; Move linearly to the specified position
+        KB_GripClose = 1  ; Close the gripper
+        WAIT FOR KB_GripClose == 2  ; Wait until the gripper is closed
+
+    case 4  ; Case for grabbing drink
+        change_orientation("B")  ; Change the orientation to "B"
+        PTP {X 0, Y 0, Z 0}  ; Move to the specified position
+
+    case 5  ; Case for grabbing plate
+        $BASE = BASE_DATA[1]  ; Set the base position to the specified base data
+        PTP {X 0, Y 60, Z 120}  ; Move to the plate position
+        KB_GripOpen = 1  ; Open the gripper
+
+        WAIT FOR KB_GripOpen == 2  ; Wait until the gripper is open
+
+        KB_GripOpen = 0  ; Reset the gripper open signal
+
+        $OV_PRO = 10  ; Set the override percentage to 10%
+
+        LIN {Z -5}  ; Move linearly to the specified position
+        PTP {A6 -33}  ; Move to the specified position
+
+        KB_GripClose = 1  ; Close the gripper
+        WAIT FOR KB_GripClose == 2  ; Wait until the gripper is closed
+        KB_GripClose = 0  ; Reset the gripper close signal
+
+        $TOOL = TOOL_DATA[4]  ; Set the tool to the specified tool data
+
+        LIN {Z 120}  ; Move linearly to the specified position
+
+        $OV_PRO = 100  ; Set the override percentage back to 100%
+
+        PTP {X 0, Y 0, Z 120}  ; Move to the specified position
+
+        $OV_PRO = 10  ; Set the override percentage to 10%
+
+        LIN {Z 40}  ; Move linearly to the specified position
+        PTP {A4 91, A5 -90, A6 -75}  ; Move to the specified position
+        PTP {X - 26, Y -65, Z 10}  ; Move to the specified position
+        PTP {A6 -57}  ; Move to the specified position
+        Plate = $AXIS_ACT  ; Assign the current axis positions to Plate
+        LIN {Z -15}  ; Move linearly to the specified position
+
+        KB_GripOpen = 1  ; Open the gripper
+        WAIT FOR KB_GripOpen == 2  ; Wait until the gripper is open
+        KB_GripOpen = 0  ; Reset the gripper open signal
+
+        LIN {Z 120}  ; Move linearly to the specified position
+
+        $OV_PRO = 100  ; Set the override percentage back to 100%
+
+        KB_GripClose = 1  ; Close the gripper
+        WAIT FOR KB_GripClose == 2  ; Wait until the gripper is closed
+        KB_GripClose = 0  ; Reset the gripper close signal
+        KB_Job = 2  ; Set the next job number
+
+    case 6  ; Case for grabbing burger
+        change_orientation("L")  ; Change the orientation to "L"
+        $BASE = BASE_DATA[1]  ; Set the base position to the specified base data
+        $ADVANCE=3  ; Enable advance mode for motion commands
+        grill_on_off()  ; Call the function to turn on/off the grill
+        $ADVANCE=1  ; Disable advance mode for motion commands
+        LIN {Z 180}  ; Move linearly to the specified position
+        KB_Processed = TRUE  ; Set KB_Processed to TRUE
+        change_orientation("F")  ; Change the orientation to "F"
+        KB_JOB = 10  ; Set the next job number
+
+    case 7  ; Case for pressing grill button
+        $KB_Available = FALSE  ; Set KB_Available to FALSE
+        change_orientation("L")  ; Change the orientation to "L"
+        $BASE = BASE_DATA[1]  ; Set the base position to the specified base data
+        $ADVANCE=3  ; Enable advance mode for motion commands
+        grill_on_off()  ; Call the function to turn on/off the grill
+        $ADVANCE=1  ; Disable advance mode for motion commands
+        LIN {Z 180}  ; Move linearly to the specified position
+        KB_Job = 5  ; Set the next job number
+
+    default  ; Default case if none of the above cases match
+        KB_GripOpen = 0  ; Reset the gripper open signal
+        KB_GripClose = 0  ; Reset the gripper close signal
+        KB_ButtonClicked = FALSE  ; Reset the button clicked signal
+        KB_Music = 0  ; Reset the music signal
+        KB_InPosition = 0  ; Reset the in-position signal
+        $KB_Available = TRUE  ; Set KB_Available to TRUE
+        KB_Processed = FALSE  ; Reset the processed signal
+        break  ; Exit the switch case
+
+    endswitch  ; End of the switch case
+
+ENDLOOP  ; End of the loop
+
+;FOLD SPTP HOME Vel=100 % DEFAULT ;%{PE}
+;FOLD Parameters ;%{h}
+;Params IlfProvider=kukaroboter.basistech.inlineforms.movement.spline; Kuka.IsGlobalPoint=False; Kuka.PointName=HOME; Kuka.BlendingEnabled=False; Kuka.MoveDataPtpName=DEFAULT; Kuka.VelocityPtp=100; Kuka.VelocityFieldEnabled=True; Kuka.CurrentCDSetIndex=0; Kuka.MovementParameterFieldEnabled=True; IlfCommand=SPTP
+;ENDFOLD
+SPTP XHOME WITH $VEL_AXIS[1] = SVEL_JOINT(100.0), $TOOL = STOOL2(FHOME), $BASE = SBASE(FHOME.BASE_NO), $IPO_MODE = SIPO_MODE(FHOME.IPO_FRAME), $LOAD = SLOAD(FHOME.TOOL_NO), $ACC_AXIS[1] = SACC_JOINT(PDEFAULT), $APO = SAPO_PTP(PDEFAULT), $GEAR_JERK[1] = SGEAR_JERK(PDEFAULT), $COLLMON_TOL_PRO[1] = USE_CM_PRO_VALUES(0)
+;ENDFOLD
+END
